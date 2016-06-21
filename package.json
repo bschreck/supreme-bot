@@ -1,0 +1,9 @@
+{
+  "name": "supreme-bot",
+  "main": "main.js",
+  "version": "0.0.1",
+  "dependencies": {
+    "coffee-script": "^1.10.0",
+    "nightmare": "^2.5.2"
+  }
+}
