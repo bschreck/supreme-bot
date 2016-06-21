@@ -4,7 +4,11 @@
 #Lotte: https://github.com/StanAngeloff/lotte
 #Ghostbuster: https://github.com/joshbuddy/ghostbuster
 #
+Xvfb = require('xvfb')
 Nightmare = (require 'nightmare')
+xvfb = new Xvfb
+    silent: true
+xvfb.startSync()
 nightmare = Nightmare
     show: false
     switches:
@@ -24,8 +28,10 @@ result = nightmare
 result
    .then((result)->
         console.log result
+        xvfb.stop()
   ).catch (error)->
         console.error 'Search failed:', error
+        xvfb.stop()
 
 
 #commands:
