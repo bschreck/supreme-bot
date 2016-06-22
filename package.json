@@ -5,7 +5,8 @@
   "dependencies": {
     "coffee-script": "^1.10.0",
     "nightmare": "^2.5.2",
-    "xvfb":"^0.2.3"
+    "xvfb":"^0.2.3",
+    "jquery": "^2.1.0"
   },
   "devDependencies": {
     "electron-prebuilt": "^1.2.3"

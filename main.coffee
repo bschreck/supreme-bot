@@ -4,6 +4,7 @@
 #Lotte: https://github.com/StanAngeloff/lotte
 #Ghostbuster: https://github.com/joshbuddy/ghostbuster
 #
+fs = require 'fs'
 Xvfb = require('xvfb')
 Nightmare = (require 'nightmare')
 xvfb = new Xvfb
@@ -16,22 +17,90 @@ nightmare = Nightmare
         'no-proxy-server': true
         'disable-renderer-backgrounding': true
 
-result = nightmare
-  .goto('http://yahoo.com')
-  .type('form[action*="/search"] [name=p]', 'github nightmare')
-  .click('form[action*="/search"] [type=submit]')
-  .wait('#main')
-  .evaluate( ->
-      document.querySelector('#main .searchCenterMiddle li a').href
-  ).end()
+creditCardTypeFormat = (ctype)->
+    switch ctype
+        when "Visa" then "visa"
+        when "American Express" then "american_express"
+        when "Mastercard" then "master"
+        else "visa"
+loadOptions = ()->
+    data = JSON.parse(fs.readFileSync 'secrets.json')
+    data.cardType = creditCardTypeFormat(data.cardType)
+    console.log "DATA CARD TYPE:", data.cardType
+    data
+gOptions = loadOptions()
+getSize = ->
+    gOptions.size
 
-result
-   .then((result)->
-        console.log result
+buildURL = (siteFunction, itemType, hash)->
+    mainSite = 'www.supremenewyork.com'
+    if siteFunction == "shop"
+        return "http://#{mainSite}/#{siteFunction}/#{itemType}/#{hash}"
+    else
+        return "https://#{mainSite}/#{siteFunction}"
+addToCartInjection = (clothingSize)->
+    options = []
+    option = null
+    for option in $('select[name*=size] option')
+        if $(option).text() is clothingSize
+            option = $(option).val()
+            break
+        options.push $(option).val()
+    if not option?
+        option = options[0]
+    $('select[name*="size"]').val(option)
+    $('input[value="add to cart"]').click()
+    return true
+addToCart = (next)->
+    (nightmare)->
+        nightmare.goto(buildURL "shop", "t-shirts", "dcs7fu6dn")
+        #.inject('js', 'node_modules/jquery/dist/jquery.min.js')
+        .evaluate(addToCartInjection, getSize())
+        .then (val)->
+            console.log val
+            nightmare.wait('form[action*="/remove"]')
+            next(nightmare)
+
+
+inputCreditCardInfo = (inputs)->
+    $('input[name="order[billing_name]"]')     .val inputs.name
+    $('input[name="order[email]"]')            .val inputs.email
+    $('input[name="order[tel]"]')              .val inputs.tel
+    $('input[name="order[billing_address]"]')  .val inputs.address1
+    $('input[name="order[billing_address_2]"]').val inputs.address2
+    $('input[name="order[billing_city]"]')     .val inputs.city
+    $('input[name="order[billing_zip]"]')      .val inputs.zip
+    $('select[name*="country"]')               .val inputs.country
+    $('select[name*="state"]')                 .val inputs.state
+    $('select[name="credit_card[type]"]')      .val inputs.cardType
+    cardInputs = $("#card_details").find("input")
+    $(cardInputs[0])                           .val inputs.cardNum
+    $(cardInputs[1])                           .val inputs.cvc
+    $('select[name*="credit_card[month]"]')    .val inputs.expMonth
+    $('select[name*="credit_card[year]"]')     .val inputs.expYear
+    $("#cart-cc").find(".icheckbox_minimal").click ->
+        $('input[class*="checkout"],input[type="submit"]').click()
+    $("#cart-cc").find(".icheckbox_minimal").click()
+
+
+
+
+checkout = (nightmare)->
+    nightmare.goto(buildURL "checkout")
+    .evaluate(inputCreditCardInfo, gOptions)
+
+
+nightmare.use addToCart (nightmare)->
+    nightmare.use checkout
+    .wait('div[class="errors"]')
+    .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
+    .end()
+    .then( (val)->
+        console.log "Val:",val
+        console.log "Success"
         xvfb.stop()
-  ).catch (error)->
-        console.error 'Search failed:', error
-        xvfb.stop()
+    ).catch (err)->
+        console.error "Failed:",err
 
 
 #commands:
