@@ -7,15 +7,16 @@
 fs = require 'fs'
 Xvfb = require('xvfb')
 Nightmare = (require 'nightmare')
+selectNewItem = require './select_new_item'
 xvfb = new Xvfb
     silent: true
 xvfb.startSync()
-nightmare = Nightmare
-    show: false
-    switches:
-        'ignore-certificate-errors': true
-        'no-proxy-server': true
-        'disable-renderer-backgrounding': true
+#nightmare = Nightmare
+    #show: true
+    #switches:
+        #'ignore-certificate-errors': true
+        #'no-proxy-server': true
+        #'disable-renderer-backgrounding': true
 
 creditCardTypeFormat = (ctype)->
     switch ctype
@@ -34,9 +35,11 @@ getSize = ->
 buildURL = (siteFunction, itemType, hash)->
     mainSite = 'www.supremenewyork.com'
     if siteFunction == "shop"
-        return "http://#{mainSite}/#{siteFunction}/#{itemType}/#{hash}"
+        #return "http://#{mainSite}/#{siteFunction}/#{itemType}/#{hash}"
+        return 'file:///Users/bschreck/supreme_bot/shop.html'
     else
-        return "https://#{mainSite}/#{siteFunction}"
+        #return "https://#{mainSite}/#{siteFunction}"
+        return 'file:///Users/bschreck/supreme_bot/checkout.html'
 addToCartInjection = (clothingSize)->
     options = []
     option = null
@@ -50,9 +53,9 @@ addToCartInjection = (clothingSize)->
     $('select[name*="size"]').val(option)
     $('input[value="add to cart"]').click()
     return true
-addToCart = (next)->
+addToCart = (itemType, hash, next)->
     (nightmare)->
-        nightmare.goto(buildURL "shop", "t-shirts", "dcs7fu6dn")
+        nightmare.goto(buildURL "shop", itemType, hash)
         #.inject('js', 'node_modules/jquery/dist/jquery.min.js')
         .evaluate(addToCartInjection, getSize())
         .then (val)->
@@ -78,6 +81,7 @@ inputCreditCardInfo = (inputs)->
     $('select[name*="credit_card[month]"]')    .val inputs.expMonth
     $('select[name*="credit_card[year]"]')     .val inputs.expYear
     $("#cart-cc").find(".icheckbox_minimal").click ->
+        console.log "shit"
         $('input[class*="checkout"],input[type="submit"]').click()
     $("#cart-cc").find(".icheckbox_minimal").click()
 
@@ -88,20 +92,43 @@ checkout = (nightmare)->
     nightmare.goto(buildURL "checkout")
     .evaluate(inputCreditCardInfo, gOptions)
 
+#TODO: make waittimeout longer during checkout
+#but keep shorter during waitfornewitems
+nightmare = Nightmare
+    show: true
+    waitTimeout: 500
+    switches:
+        'ignore-certificate-errors': true
+        'no-proxy-server': true
+        'disable-renderer-backgrounding': true
+itemType = 't-shirts'
+baseURL = 'http://www.supremenewyork.com'
+baseURL = 'file:///Users/bschreck/supreme_bot/articles.html'
+runNightmareWithRefresh = (nightmare, itemType, count, existingItems)->
+    console.log existingItems
+    if count > 0
+        nightmare.refresh()
+    else
+        #nightmare.goto "#{baseURL}/shop/all/#{itemType}"
+        nightmare.goto(baseURL)
+    nightmare.use selectNewItem existingItems, (hash, newItems)->
+        if hash?
+            nightmare.use addToCart itemType, hash, (nightmare)->
+                nightmare.use checkout
+                .wait('div[class="errors"]')
+                .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
+                .end()
+                .then( (val)->
+                    console.log "Val:", val
+                    console.log "Success"
+                ).catch (err)->
+                    console.error "Failed:",err
+                xvfb.stop()
+        else
+            runNightmareWithRefresh(nightmare, itemType, count+1, newItems)
 
-nightmare.use addToCart (nightmare)->
-    nightmare.use checkout
-    .wait('div[class="errors"]')
-    .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
-    .end()
-    .then( (val)->
-        console.log "Val:",val
-        console.log "Success"
-        xvfb.stop()
-    ).catch (err)->
-        console.error "Failed:",err
 
-
+runNightmareWithRefresh nightmare, itemType, 0, null
 #commands:
 #.back()
 #

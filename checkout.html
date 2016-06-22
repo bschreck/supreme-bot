@@ -1,0 +1,48 @@
+<html>
+<body>
+<input name="order[billing_name]"></input>
+<input name="order[email]"></input>
+<input name="order[tel]"></input>
+<input name="order[billing_address]"></input>
+<input name="order[billing_address_2]"></input>
+<input name="order[billing_city]"></input>
+<input name="order[billing_zip]"></input>
+<select name="order[country]">
+<option val="USA">USA</option>
+<option val="Canada">Canada</option>
+</select>
+<select name="order[state]">
+<option val="MA">MA</option>
+<option val="CA">CA</option>
+</select>
+<select name="credit_card[type]">
+<option val="visa">Visa</option>
+<option val="master">Mastercard</option>
+<option val="amex">American Express</option>
+</select>
+<div id="card_details">
+  <label for="doesntmatter1">Card Num</label>
+  <input id="doesntmatter1"></input>
+  <label for="doesntmatter2">CVC</label>
+  <input id="doesntmatter2"></input>
+</div>
+<select name="credit_card[month]">
+<option val="06">06</option>
+<option val="07">07</option>
+</select>
+<select name="credit_card[year]">
+<option val="2016">2016</option>
+<option val="2017">2017</option>
+</select>
+<div id="cart-cc">
+  <input type="checkbox" class="icheckbox_minimal"></input>
+  <input id="checkout" type="submit" class="checkout">Checkout</input>
+</div>
+<script src="/Users/bschreck/supreme_bot/node_modules/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+$("#checkout").click(function(){
+  //$("#cart-cc").append('<div class="errors"></div>');
+});
+</script>
+</body>
+</html>

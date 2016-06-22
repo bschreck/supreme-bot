@@ -1,0 +1,19 @@
+<html>
+<body>
+<select name="size">
+  <option value="3316">Small</option>
+  <option value="3317">Medium</option>
+  <option value="3318">Large</option>
+</select>
+<input id="ac-button" value="add to cart" type="submit"></input>
+<form id="ac-form" action="cart/add">
+</form>
+<script src="/Users/bschreck/supreme_bot/node_modules/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+$("#ac-button").click(function(){
+  console.log("changing attr");
+  $("#ac-form").attr("action","cart/remove");
+});
+</script>
+</body>
+</html>
