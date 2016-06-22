@@ -26,7 +26,6 @@ creditCardTypeFormat = (ctype)->
 loadOptions = ()->
     data = JSON.parse(fs.readFileSync 'secrets.json')
     data.cardType = creditCardTypeFormat(data.cardType)
-    console.log "DATA CARD TYPE:", data.cardType
     data
 gOptions = loadOptions()
 getSize = ->
@@ -54,12 +53,13 @@ addToCartInjection = (clothingSize)->
 addToCart = (next)->
     (nightmare)->
         nightmare.goto(buildURL "shop", "t-shirts", "dcs7fu6dn")
-        #.inject('js', 'node_modules/jquery/dist/jquery.min.js')
-        .evaluate(addToCartInjection, getSize())
-        .then (val)->
-            console.log val
-            nightmare.wait('form[action*="/remove"]')
-            next(nightmare)
+        .inject('js', 'node_modules/jquery/dist/jquery.min.js')
+        #.evaluate(addToCartInjection, getSize())
+        #.then (val)->
+            #console.log val
+            #nightmare.wait('form[action*="/remove"]')
+            #next(nightmare)
+        next(nightmare)
 
 
 inputCreditCardInfo = (inputs)->
@@ -91,9 +91,9 @@ checkout = (nightmare)->
 
 
 nightmare.use addToCart (nightmare)->
-    nightmare.use checkout
-    .wait('div[class="errors"]')
-    .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
+    #nightmare.use checkout
+    #.wait('div[class="errors"]')
+    nightmare.screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
     .end()
     .then( (val)->
         console.log "Val:",val
