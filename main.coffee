@@ -35,11 +35,11 @@ getSize = ->
 buildURL = (siteFunction, itemType, hash)->
     mainSite = 'www.supremenewyork.com'
     if siteFunction == "shop"
-        #return "http://#{mainSite}/#{siteFunction}/#{itemType}/#{hash}"
-        return 'file:///Users/bschreck/supreme_bot/shop.html'
+        return "http://#{mainSite}/#{siteFunction}/#{itemType}/#{hash}"
+        #return 'file:///Users/bschreck/supreme_bot/shop.html'
     else
-        #return "https://#{mainSite}/#{siteFunction}"
-        return 'file:///Users/bschreck/supreme_bot/checkout.html'
+        return "https://#{mainSite}/#{siteFunction}"
+        #return 'file:///Users/bschreck/supreme_bot/checkout.html'
 addToCartInjection = (clothingSize)->
     options = []
     option = null
@@ -103,19 +103,20 @@ nightmare = Nightmare
         'disable-renderer-backgrounding': true
 itemType = 't-shirts'
 baseURL = 'http://www.supremenewyork.com'
-baseURL = 'file:///Users/bschreck/supreme_bot/articles.html'
+#baseURL = 'file:///Users/bschreck/supreme_bot/articles.html'
 runNightmareWithRefresh = (nightmare, itemType, count, existingItems)->
     console.log existingItems
     if count > 0
         nightmare.refresh()
     else
-        #nightmare.goto "#{baseURL}/shop/all/#{itemType}"
-        nightmare.goto(baseURL)
+        nightmare.goto "#{baseURL}/shop/all/#{itemType}"
+        #nightmare.goto(baseURL)
     nightmare.use selectNewItem existingItems, (hash, newItems)->
         if hash?
             nightmare.use addToCart itemType, hash, (nightmare)->
                 nightmare.use checkout
-                .wait('div[class="errors"]')
+                #.wait('div[class="errors"]')
+                .wait(5000)
                 .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
                 .end()
                 .then( (val)->
