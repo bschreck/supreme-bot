@@ -51,7 +51,9 @@ addToCartInjection = (clothingSize)->
     if not option?
         option = options[0]
     $('select[name*="size"]').val(option)
+    setTimeout((->
     $('input[value="add to cart"]').click()
+    ),200)
     return true
 addToCart = (itemType, hash, next)->
     (nightmare)->
@@ -59,7 +61,7 @@ addToCart = (itemType, hash, next)->
         #.inject('js', 'node_modules/jquery/dist/jquery.min.js')
         .evaluate(addToCartInjection, getSize())
         .then (val)->
-            console.log val
+            console.log "OTUPUT;", val
             nightmare.wait('form[action*="/remove"]')
             next(nightmare)
 
@@ -81,7 +83,6 @@ inputCreditCardInfo = (inputs)->
     $('select[name*="credit_card[month]"]')    .val inputs.expMonth
     $('select[name*="credit_card[year]"]')     .val inputs.expYear
     $("#cart-cc").find(".icheckbox_minimal").click ->
-        console.log "shit"
         $('input[class*="checkout"],input[type="submit"]').click()
     $("#cart-cc").find(".icheckbox_minimal").click()
 
@@ -96,25 +97,34 @@ checkout = (nightmare)->
 #but keep shorter during waitfornewitems
 nightmare = Nightmare
     show: true
-    waitTimeout: 500
+    waitTimeout: 3000
     switches:
         'ignore-certificate-errors': true
         'no-proxy-server': true
         'disable-renderer-backgrounding': true
-itemType = 't-shirts'
+itemType = 'tops_sweaters'
+keywords = [
+    "burroughs",
+    "beach",
+    "spin",
+    "shit",
+    "script",
+    "tee"
+]
 baseURL = 'http://www.supremenewyork.com'
 #baseURL = 'file:///Users/bschreck/supreme_bot/articles.html'
 runNightmareWithRefresh = (nightmare, itemType, count, existingItems)->
-    console.log existingItems
     if count > 0
         nightmare.refresh()
     else
         nightmare.goto "#{baseURL}/shop/all/#{itemType}"
         #nightmare.goto(baseURL)
-    nightmare.use selectNewItem existingItems, (hash, newItems)->
+    nightmare.use selectNewItem existingItems, keywords, (hash, newItems)->
         if hash?
             nightmare.use addToCart itemType, hash, (nightmare)->
-                nightmare.use checkout
+                nightmare.wait(2000)
+                .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
+                .use checkout
                 #.wait('div[class="errors"]')
                 .wait(5000)
                 .screenshot("/Users/bschreck/supreme_bot/supreme_shot.png")
@@ -126,7 +136,9 @@ runNightmareWithRefresh = (nightmare, itemType, count, existingItems)->
                     console.error "Failed:",err
                 xvfb.stop()
         else
-            runNightmareWithRefresh(nightmare, itemType, count+1, newItems)
+            setTimeout((->
+                runNightmareWithRefresh(nightmare, itemType, count+1, newItems)
+            ), 100)
 
 
 runNightmareWithRefresh nightmare, itemType, 0, null
